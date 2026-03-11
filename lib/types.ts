@@ -166,3 +166,24 @@ export interface APIError {
   detail: string;
   status_code: number;
 }
+
+// ---- API type aliases (for api.ts compatibility) ----
+
+/** Alias: summary stats returned by /dashboard/summary */
+export type DashboardSummary = KPISummary;
+
+/** Segment breakdown returned by /dashboard/segments */
+export interface DashboardSegments {
+  group_by: string;
+  segments: SegmentStat[];
+}
+
+/** Alias: pipeline suggestion = radar opportunity */
+export type PipelineSuggestion = RadarOpportunity;
+
+/** Single config key/value entry from /config/ */
+export interface ConfigEntry {
+  key: string;
+  value: string;
+  description: string | null;
+}
