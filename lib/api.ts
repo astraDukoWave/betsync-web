@@ -1,5 +1,6 @@
 import type {
-  DashboardData,
+  DashboardSummary,
+  DashboardSegments,
   PaginatedResponse,
   Pick,
   PickCreate,
@@ -7,9 +8,9 @@ import type {
   Parlay,
   ParlayCreate,
   PipelineJob,
-  RadarOpportunity,
-  UserSettings,
-  AIConfig,
+  PipelineSuggestion,
+  Sportsbook,
+  ConfigEntry,
 } from "./types";
 
 const BASE_URL =
@@ -30,8 +31,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 // ---- Dashboard ----
-export const getDashboard = () =>
-  request<DashboardData>("/dashboard");
+export const getDashboardSummary = () =>
+  request<DashboardSummary>("/dashboard/summary");
+
+export const getDashboardSegments = (params?: {
+  group_by?: string;
+}) => {
+  const qs = new URLSearchParams();
+  if (params?.group_by) qs.set("group_by", params.group_by);
+  return request<DashboardSegments>(`/dashboard/segments?${qs.toString()}`);
+};
 
 // ---- Picks ----
 export const getPicks = (params?: {
@@ -54,13 +63,19 @@ export const createPick = (data: PickCreate) =>
   request<Pick>("/picks", { method: "POST", body: JSON.stringify(data) });
 
 export const resolvePick = (id: string, data: PickResolve) =>
-  request<Pick>(`/picks/${id}/resolve`, {
+  request<Pick>(`/picks/${id}/result`, {
     method: "PATCH",
     body: JSON.stringify(data),
   });
 
 export const deletePick = (id: string) =>
   request<void>(`/picks/${id}`, { method: "DELETE" });
+
+export const confirmPick = (id: string, confirmed: boolean) =>
+  request<Pick>(`/picks/${id}/confirm`, {
+    method: "PATCH",
+    body: JSON.stringify({ confirmed }),
+  });
 
 // ---- Parlays ----
 export const getParlays = (params?: { page?: number; page_size?: number }) => {
@@ -70,11 +85,10 @@ export const getParlays = (params?: { page?: number; page_size?: number }) => {
   return request<PaginatedResponse<Parlay>>(`/parlays?${qs.toString()}`);
 };
 
+export const getParlay = (id: string) => request<Parlay>(`/parlays/${id}`);
+
 export const createParlay = (data: ParlayCreate) =>
   request<Parlay>("/parlays", { method: "POST", body: JSON.stringify(data) });
-
-export const deleteParlay = (id: string) =>
-  request<void>(`/parlays/${id}`, { method: "DELETE" });
 
 // ---- Pipeline ----
 export const triggerPipeline = () =>
@@ -83,26 +97,24 @@ export const triggerPipeline = () =>
 export const getPipelineJob = (jobId: string) =>
   request<PipelineJob>(`/pipeline/jobs/${jobId}`);
 
-export const getRadarOpportunities = () =>
-  request<RadarOpportunity[]>("/pipeline/opportunities");
+export const getPipelineSuggestions = () =>
+  request<PipelineSuggestion[]>("/pipeline/suggestions");
 
-// ---- Settings ----
-export const getSettings = () => request<UserSettings>("/settings");
+// ---- Sportsbooks ----
+export const getSportsbooks = () =>
+  request<Sportsbook[]>("/sportsbooks/");
 
-export const updateAIConfig = (data: Partial<AIConfig>) =>
-  request<UserSettings>("/settings/ai", {
+export const updateSportsbook = (id: string, data: Partial<Sportsbook>) =>
+  request<Sportsbook>(`/sportsbooks/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),
   });
 
-export const updateUnitSize = (unit_size_usd: number) =>
-  request<UserSettings>("/settings/unit-size", {
-    method: "PATCH",
-    body: JSON.stringify({ unit_size_usd }),
-  });
+// ---- Config ----
+export const getConfig = () => request<ConfigEntry[]>("/config/");
 
-export const toggleSportsbook = (id: string, is_active: boolean) =>
-  request<UserSettings>(`/settings/sportsbooks/${id}`, {
+export const updateConfig = (key: string, value: string) =>
+  request<ConfigEntry>(`/config/${key}`, {
     method: "PATCH",
-    body: JSON.stringify({ is_active }),
+    body: JSON.stringify({ value }),
   });
