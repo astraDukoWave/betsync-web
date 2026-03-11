@@ -1,23 +1,25 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  getDashboard,
+  getDashboardSummary,
+  getDashboardSegments,
   getPicks,
   getPick,
   createPick,
   resolvePick,
   deletePick,
+  confirmPick,
   getParlays,
+  getParlay,
   createParlay,
-  deleteParlay,
   triggerPipeline,
   getPipelineJob,
-  getRadarOpportunities,
-  getSettings,
-  updateAIConfig,
-  updateUnitSize,
-  toggleSportsbook,
+  getPipelineSuggestions,
+  getSportsbooks,
+  updateSportsbook,
+  getConfig,
+  updateConfig,
 } from "./api";
-import type { PickCreate, PickResolve, ParlayCreate, AIConfig } from "./types";
+import type { PickCreate, PickResolve, ParlayCreate, Sportsbook } from "./types";
 
 const POLLING_INTERVAL =
   Number(process.env.NEXT_PUBLIC_POLLING_INTERVAL_MS) || 2000;
@@ -25,19 +27,31 @@ const POLLING_INTERVAL =
 // ---- Query Keys ----
 export const keys = {
   dashboard: ["dashboard"] as const,
+  dashboardSegments: (params?: object) => ["dashboard", "segments", params] as const,
   picks: (params?: object) => ["picks", params] as const,
   pick: (id: string) => ["picks", id] as const,
   parlays: (params?: object) => ["parlays", params] as const,
+  parlay: (id: string) => ["parlays", id] as const,
   pipeline: (jobId?: string) => ["pipeline", jobId] as const,
-  radar: ["radar"] as const,
-  settings: ["settings"] as const,
+  pipelineSuggestions: ["pipeline", "suggestions"] as const,
+  sportsbooks: ["sportsbooks"] as const,
+  config: ["config"] as const,
 };
 
 // ---- Dashboard ----
 export function useDashboard() {
   return useQuery({
     queryKey: keys.dashboard,
-    queryFn: getDashboard,
+    queryFn: getDashboardSummary,
+    select: (d) => ({ summary: d }),
+    staleTime: 30_000,
+  });
+}
+
+export function useDashboardSegments(params?: Parameters<typeof getDashboardSegments>[0]) {
+  return useQuery({
+    queryKey: keys.dashboardSegments(params),
+    queryFn: () => getDashboardSegments(params),
     staleTime: 30_000,
   });
 }
@@ -86,6 +100,15 @@ export function useDeletePick() {
   });
 }
 
+export function useConfirmPick() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, confirmed }: { id: string; confirmed: boolean }) =>
+      confirmPick(id, confirmed),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["picks"] }),
+  });
+}
+
 // ---- Parlays ----
 export function useParlays(params?: Parameters<typeof getParlays>[0]) {
   return useQuery({
@@ -94,18 +117,18 @@ export function useParlays(params?: Parameters<typeof getParlays>[0]) {
   });
 }
 
+export function useParlay(id: string) {
+  return useQuery({
+    queryKey: keys.parlay(id),
+    queryFn: () => getParlay(id),
+    enabled: Boolean(id),
+  });
+}
+
 export function useCreateParlay() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (data: ParlayCreate) => createParlay(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["parlays"] }),
-  });
-}
-
-export function useDeleteParlay() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: string) => deleteParlay(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["parlays"] }),
   });
 }
@@ -125,49 +148,50 @@ export function usePipelineJob(jobId: string | null) {
     queryFn: () => getPipelineJob(jobId!),
     enabled: Boolean(jobId),
     refetchInterval: (query) => {
-      const status = query.state.data?.status;
+      const status = (query.state.data as { status?: string } | undefined)?.status;
       return status === "running" ? POLLING_INTERVAL : false;
     },
     retry: false,
   });
 }
 
-export function useRadarOpportunities() {
+export function usePipelineSuggestions() {
   return useQuery({
-    queryKey: keys.radar,
-    queryFn: getRadarOpportunities,
+    queryKey: keys.pipelineSuggestions,
+    queryFn: getPipelineSuggestions,
   });
 }
 
-// ---- Settings ----
-export function useSettings() {
+// ---- Sportsbooks ----
+export function useSportsbooks() {
   return useQuery({
-    queryKey: keys.settings,
-    queryFn: getSettings,
+    queryKey: keys.sportsbooks,
+    queryFn: getSportsbooks,
   });
 }
 
-export function useUpdateAIConfig() {
+export function useUpdateSportsbook() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<AIConfig>) => updateAIConfig(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.settings }),
+    mutationFn: ({ id, data }: { id: string; data: Partial<Sportsbook> }) =>
+      updateSportsbook(id, data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.sportsbooks }),
   });
 }
 
-export function useUpdateUnitSize() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (usd: number) => updateUnitSize(usd),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.settings }),
+// ---- Config ----
+export function useConfig() {
+  return useQuery({
+    queryKey: keys.config,
+    queryFn: getConfig,
   });
 }
 
-export function useToggleSportsbook() {
+export function useUpdateConfig() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
-      toggleSportsbook(id, is_active),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.settings }),
+    mutationFn: ({ key, value }: { key: string; value: string }) =>
+      updateConfig(key, value),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.config }),
   });
 }
