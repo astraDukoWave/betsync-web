@@ -195,3 +195,20 @@ export function useUpdateConfig() {
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.config }),
   });
 }
+
+// ---- Backward-compatible aliases ----
+// useRadarOpportunities -> pipeline suggestions
+export const useRadarOpportunities = usePipelineSuggestions;
+
+// useSettings -> combined sportsbooks + config for settings page
+export function useSettings() {
+  const sportsbooks = useSportsbooks();
+  const config = useConfig();
+  const isLoading = sportsbooks.isLoading || config.isLoading;
+  const isError = sportsbooks.isError || config.isError;
+  const data = (!isLoading && !isError && sportsbooks.data && config.data)
+    ? { sportsbooks: sportsbooks.data, ai_config: config.data.find((c) => c.key === 'ai_model') ?? null, config: config.data }
+    : undefined;
+  const refetch = () => { sportsbooks.refetch(); config.refetch(); };
+  return { data, isLoading, isError, refetch };
+}
