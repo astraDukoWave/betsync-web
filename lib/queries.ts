@@ -212,3 +212,14 @@ export function useSettings() {
   const refetch = () => { sportsbooks.refetch(); config.refetch(); };
   return { data, isLoading, isError, refetch };
 }
+
+
+// useToggleSportsbook -> useUpdateSportsbook (toggles is_active)
+export function useToggleSportsbook() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
+      updateSportsbook(id, { is_active }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: keys.sportsbooks }),
+  });
+}
