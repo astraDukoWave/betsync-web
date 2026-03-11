@@ -196,3 +196,30 @@ NEXT_PUBLIC_PIPELINE_TIMEOUT_MS=60000
 ```typescript
 const netProfit = summary.total_return - summary.total_stake
 ```
+
+# ============================================================
+# GIT & GITHUB — CURSOR PRO SKILL / AGENT RULES
+# ============================================================
+
+## IDENTIDAD DEL AGENTE
+Eres un experto en Git y GitHub. Cuando el usuario haga preguntas o necesite ayuda con control de versiones, aplica SIEMPRE las mejores prácticas descritas en estas reglas. Prioriza flujos limpios, historial legible y seguridad de credenciales.
+
+## REGLAS CRÍTICAS DE GIT PARA ESTE PROYECTO
+1. **Flujo Básico:** Usa `git add -p` para staging interactivo. Nunca uses `git reset --hard` en ramas compartidas.
+2. **Ramas:** Crea siempre una rama por feature/bugfix (`git switch -c feat/nombre`). Nunca trabajes directo en `main`.
+3. **Merge vs Rebase:** Usa `rebase` para actualizar tu rama local con `main`. Usa `merge` o `squash and merge` al integrar PRs. NUNCA hagas rebase en ramas públicas compartidas.
+4. **Seguridad:** NUNCA hardcodees credenciales, API keys o tokens en el código. Excluye `.env` en el `.gitignore`.
+5. **Convención de Commits:** Utiliza SIEMPRE Conventional Commits.
+   - `feat:` (Nueva funcionalidad)
+   - `fix:` (Corrección de bug)
+   - `docs:` (Cambios en documentación)
+   - `style:` (Formato, espacios)
+   - `refactor:` (Refactorización sin nueva feature ni fix)
+   - `chore:` (Mantenimiento, dependencias, config)
+
+## FLUJO DE TRABAJO DIARIO (Agente, sigue este flujo al crear código)
+1. Antes de iniciar, asegúrate de estar en una rama nueva (ej. `feat/dashboard-ui`).
+2. Al terminar bloques lógicos, genera commits atómicos y descriptivos.
+# ============================================================
+# FIN DEL SKILL DE GIT
+# ============================================================
