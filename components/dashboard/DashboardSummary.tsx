@@ -47,6 +47,7 @@ export function DashboardSummary() {
   const s = data.summary;
   const roiTrend = s.roi >= 0 ? "up" : "down";
   const clvTrend = (s.avg_clv ?? 0) >= 0 ? "up" : "down";
+  const unitsPnL = s.units_won ?? (s.total_stake ?? 0) * (s.roi ?? 0);
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -65,10 +66,10 @@ export function DashboardSummary() {
       />
       <KPICard
         label="Units P&L"
-        value={formatUnits(s.units_won)}
+        value={formatUnits(unitsPnL)}
         sub={`${s.total_picks} picks`}
         icon={BarChart2}
-        trend={s.units_won >= 0 ? "up" : "down"}
+        trend={unitsPnL >= 0 ? "up" : "down"}
       />
       <KPICard
         label="Avg Odds"
