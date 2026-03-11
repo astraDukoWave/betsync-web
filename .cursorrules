@@ -1,0 +1,198 @@
+# ============================================================
+# BetSync Web — .cursorrules
+# Stack: Next.js 14 App Router + TypeScript + Tailwind CSS + shadcn/ui
+# API: FastAPI backend at /api/v1 (see docs/frontend_handoff.md)
+# ============================================================
+
+## IDENTIDAD DEL PROYECTO
+Eres el AI developer de BetSync, una herramienta profesional de analítica de apuestas deportivas.
+El usuario es un apostador analítico que toma decisiones financieras. El producto debe transmitir
+CONFIANZA, PRECISIÓN y CLARIDAD. Nunca sacrifiques legibilidad por creatividad.
+
+## REGLA 1 — COLORES SEMÁNTICOS ESTRICTOS (financiero)
+Para TODOS los componentes financieros y de estado, usa EXCLUSIVAMENTE esta paleta semántica:
+
+- ROI positivo, won, CLV positivo, Grade A → `text-emerald-500` / `bg-emerald-500/10` / `border-emerald-500/30`
+- ROI negativo, lost, CLV negativo → `text-rose-500` / `bg-rose-500/10` / `border-rose-500/30`
+- pending, push → `text-slate-400` / `bg-slate-400/10`
+- void → `text-slate-500 line-through`
+- Grade B → `text-blue-400` / `bg-blue-400/10`
+- Grade C → `text-amber-400` / `bg-amber-400/10`
+- Accent / CTA principal → `bg-indigo-600 hover:bg-indigo-500`
+- Toasts de error 409/422 → `bg-amber-500/15 border-amber-500/40 text-amber-300`
+
+NUNCA uses colores arbitrarios para métricas financieras. El rojo siempre = pérdida.
+El verde siempre = ganancia. Sin excepciones.
+
+## REGLA 2 — DATA FETCHING CON TANSTACK QUERY (sin useEffect)
+Para TODOS los componentes que consuman la API de BetSync:
+
+```typescript
+// CORRECTO — siempre así
+const { data, isLoading, isError } = useQuery({
+  queryKey: ['picks', filters],
+  queryFn: () => fetchPicks(filters),
+  staleTime: 1000 * 60 * 2, // 2 min
+})
+
+if (isLoading) return <PicksTableSkeleton /> // skeleton que imita la forma final
+if (isError) return <ErrorState message={error.message} />
+```
+
+```typescript
+// PROHIBIDO — nunca hagas esto
+useEffect(() => {
+  fetch('/api/v1/picks').then(r => r.json()).then(setData)
+}, [])
+```
+
+REGLAS ESPECÍFICAS DE LA API:
+- Picks list: respuesta envuelta en `{ items: [], total, limit, offset }` → iterar `response.items`
+- Parlays list: array directo `[]` → iterar directamente
+- Filtro de picks: `pick_status` (NO `status`)
+- Filtro de parlays: `parlay_status` (NO `status`)
+- Errores: leer SIEMPRE `response.data.error.code` — NUNCA parsear `message` como string libre
+- Odds inválidas (-99 a +99): validar en cliente ANTES de llamar a la API → mostrar error inline
+
+SKELETON LOADING — obligatorio mientras `isLoading === true`:
+```tsx
+// Usar animate-pulse de Tailwind. Nunca spinners en pantallas financieras.
+<div className="animate-pulse">
+  <div className="h-4 bg-slate-700 rounded w-3/4 mb-2" />
+  <div className="h-4 bg-slate-700 rounded w-1/2" />
+</div>
+```
+
+## REGLA 3 — ANIMACIONES GPU-ONLY (sin Reflow)
+Para las tarjetas swipe del Radar de Oportunidades y cualquier animación de tarjetas:
+
+```css
+/* CORRECTO — GPU layer, no causa Reflow */
+transform: translateX(120%);
+transition: transform 300ms ease-out;
+
+/* PROHIBIDO — fuerza recálculo de layout en todo el DOM */
+margin-left: 120%; /* ❌ */
+left: 120%;        /* ❌ */
+top: -100%;        /* ❌ */
+```
+
+En React con Tailwind:
+```tsx
+// CORRECTO
+<div className={cn(
+  'transition-transform duration-300 ease-out',
+  isConfirmed && 'translate-x-[120%]',
+  isDiscarded && '-translate-x-[120%]'
+)} />
+
+// PROHIBIDO
+<div style={{ marginLeft: isDiscarded ? '-120%' : 0 }} /> // ❌
+```
+
+## REGLA 4 — SCROLL & RESIZE CON OBSERVER APIs
+```typescript
+// Scroll infinito — SIEMPRE IntersectionObserver, nunca window.onscroll
+const observer = new IntersectionObserver(([entry]) => {
+  if (entry.isIntersecting) fetchNextPage() // TanStack Query
+})
+observer.observe(sentinelRef.current)
+
+// Gráficas responsivas — SIEMPRE ResizeObserver, nunca window.resize
+const ro = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width))
+ro.observe(chartContainerRef.current)
+```
+
+## REGLA 5 — ESTRUCTURA DE ESTADO NORMALIZADA
+```typescript
+// CORRECTO — búsqueda O(1)
+const picksById: Record<string, Pick> = {
+  'uuid-1': { pick_id: 'uuid-1', ... },
+  'uuid-2': { pick_id: 'uuid-2', ... },
+}
+
+// EVITAR para listas grandes — búsqueda O(n)
+const picks: Pick[] = [...] // solo para render de listas pequeñas
+```
+
+## REGLA 6 — POLLING DEL PIPELINE
+```typescript
+// POST /pipeline/run → 202 con job_id
+// GET /pipeline/jobs/{job_id} cada 2s hasta status: 'completed' | 'failed'
+// Timeout: 60s → mostrar mensaje "Está tomando más de lo esperado"
+const { data: job } = useQuery({
+  queryKey: ['pipeline-job', jobId],
+  queryFn: () => fetchJobStatus(jobId),
+  enabled: !!jobId && !['completed', 'failed'].includes(job?.status ?? ''),
+  refetchInterval: 2000,
+  refetchIntervalInBackground: false,
+})
+
+// Timeout
+useEffect(() => {
+  if (!jobId) return
+  const timer = setTimeout(() => setPollingTimedOut(true), 60_000)
+  return () => clearTimeout(timer)
+}, [jobId])
+```
+
+## REGLA 7 — VIRTUALIZACIÓN OBLIGATORIA
+Cuando la lista de picks puede crecer a 100+ elementos:
+```tsx
+import { useVirtualizer } from '@tanstack/react-virtual'
+// mobile: overscan=5, estimateSize=64
+// desktop: overscan=10, estimateSize=52
+```
+
+## VARIABLES DE ENTORNO
+```
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+NEXT_PUBLIC_POLLING_INTERVAL_MS=2000
+NEXT_PUBLIC_PIPELINE_TIMEOUT_MS=60000
+```
+
+## ESTRUCTURA DE ARCHIVOS (App Router)
+```
+/app
+  layout.tsx            # QueryProvider + ThemeProvider
+  /dashboard/page.tsx   # SSR
+  /pipeline/page.tsx    # CSR
+  /picks/page.tsx       # CSR + virtualización
+  /settings/page.tsx    # CSR
+/components
+  /ui/                  # shadcn/ui base
+  /dashboard/           # KPICard, SegmentsChart, DashboardSummary
+  /pipeline/            # PipelineButton, RadarCard, RadarGrid
+  /picks/               # PickRow, PicksTable, PickModal, ParlayBuilder
+  /parlays/             # ParlayCard, ParlayModal
+  /settings/            # SportsbookCard, ConfigRow
+  /shared/              # SkeletonCard, ErrorState, Badge, StatusBadge
+/lib
+  api.ts                # fetchPicks, fetchParlays, fetchDashboard, etc.
+  queries.ts            # TanStack Query hooks
+  formatters.ts         # formatOdds, formatROI, formatCLV
+  types.ts              # PickResponse, ParlayResponse, DashboardSummary
+```
+
+## CATÁLOGO DE ERRORES DE LA API (manejar todos)
+| Code | HTTP | Acción en UI |
+|------|------|--------------|
+| PICK_ALREADY_RESOLVED | 409 | Toast amber: 'Este pick ya tiene resultado final' |
+| PICK_IN_PARLAY | 409 | Toast amber: 'No puedes eliminar un pick que está en un parlay' |
+| PIPELINE_ALREADY_RAN | 409 | Toast amber: 'Ya se ejecutó hoy. Usa forzar para repetirlo' |
+| PARLAY_DUPLICATE_MATCH | 400 | Inline error en builder: 'Dos picks del mismo partido' |
+| PICK_NOT_PENDING | 400 | Toast: 'El pick ya fue resuelto' |
+| VALIDATION_ERROR | 422 | Inline bajo el campo: texto del error |
+| SPORTSBOOK_EXISTS | 409 | Inline en form: 'Ya existe una casa con ese nombre' |
+
+## TIPOGRAFÍA
+- Métricas financieras (ROI, Hit Rate, retornos): `font-[Inter] tabular-nums`
+- Odds americanas (-143, +120): `font-mono` (JetBrains Mono via CSS variable)
+- Textos generales: Inter
+- NUNCA lorem ipsum — usar datos realistas de futbol/basketball
+
+## NET PROFIT (campo calculado)
+`net_profit` NO existe en la API. Calcular siempre client-side:
+```typescript
+const netProfit = summary.total_return - summary.total_stake
+```
