@@ -1,6 +1,8 @@
-function safeNum(v: number | null | undefined): number | null {
-  if (v == null || Number.isNaN(v)) return null;
-  return v;
+function safeNum(v: number | string | null | undefined): number | null {
+  if (v == null) return null;
+  const n = Number(v);
+  if (Number.isNaN(n)) return null;
+  return n;
 }
 
 /**
