@@ -22,43 +22,49 @@ function PickRow({ pick }: { pick: Pick }) {
         onClick={() => setExpanded((v) => !v)}
       >
         <td className="px-4 py-3">
-          {expanded ? (
-            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-          )}
+          <div className="flex items-center gap-2">
+            {expanded ? (
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            )}
+            <span className="text-sm font-medium">{pick.selection} en {pick.market}</span>
+          </div>
         </td>
-        <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(pick.game_date)}</td>
-        <td className="px-4 py-3 text-sm font-medium">{pick.selection}</td>
+        <td className="px-4 py-3 text-sm text-muted-foreground">{pick.source}</td>
+        <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(pick.run_date)}</td>
         <td className="px-4 py-3">
-          <OddsChip odds={pick.odds} />
+          <OddsChip odds={pick.odds_american} />
         </td>
+        <td className="px-4 py-3 text-sm font-mono tabular-nums">{pick.stake}u</td>
         <td className="px-4 py-3">
           <GradeBadge grade={pick.grade} />
         </td>
         <td className="px-4 py-3">
-          <StatusBadge status={pick.status} />
+          <CLVBadge clv={pick.clv} />
         </td>
         <td className="px-4 py-3">
-          <CLVBadge clv={pick.clv} />
+          <StatusBadge status={pick.status} />
         </td>
       </tr>
       {expanded && (
         <tr className="border-b border-border bg-surface-elevated/30">
-          <td colSpan={7} className="px-6 py-3">
+          <td colSpan={8} className="px-6 py-3">
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <p className="text-xs text-muted-foreground">Match</p>
-                <p className="font-medium">{pick.away_team} @ {pick.home_team}</p>
+                <p className="text-xs text-muted-foreground">Market</p>
+                <p className="font-medium">{pick.market}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Stake</p>
                 <p className="font-medium">{pick.stake}u</p>
               </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Notes</p>
-                <p className="text-muted-foreground">{pick.notes ?? "-"}</p>
-              </div>
+              {pick.sportsbook_id && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Sportsbook</p>
+                  <p className="text-muted-foreground">{pick.sportsbook_id}</p>
+                </div>
+              )}
             </div>
           </td>
         </tr>
@@ -99,18 +105,19 @@ export function PicksTable() {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-surface">
-            <th className="w-8 px-4 py-3" />
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Date</th>
             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Selection</th>
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Source</th>
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Date</th>
             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Odds</th>
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Stake</th>
             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Grade</th>
-            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</th>
             <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">CLV</th>
+            <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">Status</th>
           </tr>
         </thead>
         <tbody className="bg-surface">
           {picks.map((pick) => (
-            <PickRow key={pick.id} pick={pick} />
+            <PickRow key={pick.pick_id} pick={pick} />
           ))}
         </tbody>
       </table>
