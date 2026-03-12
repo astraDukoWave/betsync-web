@@ -9,7 +9,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self' https://fonts.gstatic.com",
-      "connect-src 'self' http://localhost:8000 https://*.betsync.app",
+      "connect-src 'self' http://localhost:8000 https://*.betsync.app https://*.app.github.dev",
       "frame-ancestors 'none'",
     ].join("; "),
   },
