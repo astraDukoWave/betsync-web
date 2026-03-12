@@ -10,6 +10,7 @@ import type {
   PipelineJob,
   PipelineSuggestion,
   Sportsbook,
+  SportsbookUpdate,
   ConfigEntry,
 } from "./types";
 
@@ -34,9 +35,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const getDashboardSummary = () =>
   request<DashboardSummary>("/dashboard/summary");
 
-export const getDashboardSegments = (params?: {
-  group_by?: string;
-}) => {
+export const getDashboardSegments = (params?: { group_by?: string }) => {
   const qs = new URLSearchParams();
   if (params?.group_by) qs.set("group_by", params.group_by);
   return request<DashboardSegments>(`/dashboard/segments?${qs.toString()}`);
@@ -51,16 +50,16 @@ export const getPicks = (params?: {
 }) => {
   const qs = new URLSearchParams();
   if (params?.page) qs.set("page", String(params.page));
-  if (params?.page_size) qs.set("page_size", String(params.page_size));
+  if (params?.page_size) qs.set("limit", String(params.page_size));
   if (params?.status) qs.set("status", params.status);
   if (params?.sport) qs.set("sport", params.sport);
-  return request<PaginatedResponse<Pick>>(`/picks?${qs.toString()}`);
+  return request<PaginatedResponse<Pick>>(`/picks/?${qs.toString()}`);
 };
 
 export const getPick = (id: string) => request<Pick>(`/picks/${id}`);
 
 export const createPick = (data: PickCreate) =>
-  request<Pick>("/picks", { method: "POST", body: JSON.stringify(data) });
+  request<Pick>("/picks/", { method: "POST", body: JSON.stringify(data) });
 
 export const resolvePick = (id: string, data: PickResolve) =>
   request<Pick>(`/picks/${id}/result`, {
@@ -81,14 +80,14 @@ export const confirmPick = (id: string, confirmed: boolean) =>
 export const getParlays = (params?: { page?: number; page_size?: number }) => {
   const qs = new URLSearchParams();
   if (params?.page) qs.set("page", String(params.page));
-  if (params?.page_size) qs.set("page_size", String(params.page_size));
-  return request<PaginatedResponse<Parlay>>(`/parlays?${qs.toString()}`);
+  if (params?.page_size) qs.set("limit", String(params.page_size));
+  return request<PaginatedResponse<Parlay>>(`/parlays/?${qs.toString()}`);
 };
 
 export const getParlay = (id: string) => request<Parlay>(`/parlays/${id}`);
 
 export const createParlay = (data: ParlayCreate) =>
-  request<Parlay>("/parlays", { method: "POST", body: JSON.stringify(data) });
+  request<Parlay>("/parlays/", { method: "POST", body: JSON.stringify(data) });
 
 // ---- Pipeline ----
 export const triggerPipeline = () =>
@@ -103,12 +102,6 @@ export const getPipelineSuggestions = () =>
 // ---- Sportsbooks ----
 export const getSportsbooks = () =>
   request<Sportsbook[]>("/sportsbooks/");
-
-export interface SportsbookUpdate {
-  name?: string;
-  url?: string;
-  is_active?: boolean;
-}
 
 export const updateSportsbook = (id: string, data: SportsbookUpdate) =>
   request<Sportsbook>(`/sportsbooks/${id}`, {
