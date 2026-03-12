@@ -104,7 +104,13 @@ export const getPipelineSuggestions = () =>
 export const getSportsbooks = () =>
   request<Sportsbook[]>("/sportsbooks/");
 
-export const updateSportsbook = (id: string, data: Partial<Sportsbook>) =>
+export interface SportsbookUpdate {
+  name?: string;
+  url?: string;
+  is_active?: boolean;
+}
+
+export const updateSportsbook = (id: string, data: SportsbookUpdate) =>
   request<Sportsbook>(`/sportsbooks/${id}`, {
     method: "PATCH",
     body: JSON.stringify(data),

@@ -2,7 +2,7 @@
 
 import { useToggleSportsbook } from "@/lib/queries";
 import type { Sportsbook } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, getSafeUrl } from "@/lib/utils";
 import { ExternalLink, Key } from "lucide-react";
 
 export function SportsbookCard({ sportsbook }: { sportsbook: Sportsbook }) {
@@ -29,15 +29,21 @@ export function SportsbookCard({ sportsbook }: { sportsbook: Sportsbook }) {
           <div>
             <p className="font-medium text-sm text-foreground">{sportsbook.name}</p>
             <div className="flex items-center gap-1">
-              <a
-                href={sportsbook.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {sportsbook.url} <ExternalLink className="h-2.5 w-2.5" />
-              </a>
+              {getSafeUrl(sportsbook.url) === "#" ? (
+                <span className="text-xs text-muted-foreground">
+                  {sportsbook.url}
+                </span>
+              ) : (
+                <a
+                  href={getSafeUrl(sportsbook.url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {sportsbook.url} <ExternalLink className="h-2.5 w-2.5" />
+                </a>
+              )}
             </div>
           </div>
         </div>
