@@ -2,31 +2,40 @@
 
 import { AppShell } from "@/components/layout/AppShell";
 import { SportsbookCard } from "@/components/settings/SportsbookCard";
-import { useSportsbooks, useConfig } from "@/lib/queries";
+import { ConfigRow } from "@/components/settings/ConfigRow";
+import { useSportsbooks, useConfig, useUpdateConfig } from "@/lib/queries";
 import { ErrorState } from "@/components/shared/ErrorState";
 import { SkeletonCard } from "@/components/shared/SkeletonCard";
+
+const AI_CONFIG_ENTRIES: {
+  key: string;
+  label: string;
+  type?: "text" | "number" | "select";
+  options?: string[];
+  suffix?: string;
+}[] = [
+  { key: "ai_model", label: "Model" },
+  { key: "min_grade", label: "Min Grade", type: "select", options: ["A", "B", "C", "D", "F"] },
+  { key: "min_edge_pct", label: "Min Edge", type: "number", suffix: "%" },
+  { key: "max_picks_per_day", label: "Max Picks/Day", type: "number" },
+  { key: "unit_size_usd", label: "Unit Size", type: "number", suffix: "$" },
+];
+
 export default function SettingsPage() {
   const sportsbooks = useSportsbooks();
   const config = useConfig();
+  const updateConfig = useUpdateConfig();
 
   const isLoading = sportsbooks.isLoading || config.isLoading;
   const isError = sportsbooks.isError || config.isError;
 
-  // Reshape flat config entries into a display-friendly object
   const cfg = config.data
     ? Object.fromEntries(config.data.map((c) => [c.key, c.value]))
     : null;
 
-  const aiConfig = cfg
-    ? {
-        model: cfg["ai_model"] ?? "—",
-        min_grade: cfg["min_grade"] ?? "—",
-        min_edge_pct: cfg["min_edge_pct"] ?? "—",
-        max_picks_per_day: cfg["max_picks_per_day"] ?? "—",
-      }
-    : null;
-
-  const unitSizeUsd = cfg?.["unit_size_usd"] ?? null;
+  const handleConfigSave = async (key: string, value: string | number) => {
+    await updateConfig.mutateAsync({ key, value: String(value) });
+  };
 
   const refetch = () => {
     sportsbooks.refetch();
@@ -66,34 +75,24 @@ export default function SettingsPage() {
         </section>
 
         {/* AI Config */}
-        {aiConfig && (
+        {cfg && (
           <section className="space-y-4">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Motor IA
             </h2>
-            <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Model</span>
-                <span className="font-mono text-sm">{aiConfig.model}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Min Grade</span>
-                <span className="font-mono text-sm">{aiConfig.min_grade}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Min Edge</span>
-                <span className="font-mono text-sm">{aiConfig.min_edge_pct}%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Max Picks/Day</span>
-                <span className="font-mono text-sm">{aiConfig.max_picks_per_day}</span>
-              </div>
-              {unitSizeUsd && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Unit Size</span>
-                  <span className="font-mono text-sm">${unitSizeUsd}</span>
-                </div>
-              )}
+            <div className="rounded-xl border border-border bg-surface p-4">
+              {AI_CONFIG_ENTRIES.map(({ key, label, type, options, suffix }) => (
+                <ConfigRow
+                  key={key}
+                  label={label}
+                  value={cfg[key] ?? "—"}
+                  type={type}
+                  options={options}
+                  suffix={suffix}
+                  onSave={(v) => handleConfigSave(key, v)}
+                  disabled={!(key in cfg)}
+                />
+              ))}
             </div>
           </section>
         )}
