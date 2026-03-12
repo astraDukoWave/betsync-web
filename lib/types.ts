@@ -1,89 +1,100 @@
 // ============================================
-// BetSync API Types
+// BetSync API Types — aligned with real backend responses
 // ============================================
 
 export type PickStatus = "pending" | "won" | "lost" | "push" | "void";
 export type Grade = "A" | "B" | "C" | "D" | "F";
 export type BetType = "straight" | "parlay" | "teaser" | "prop";
-export type Sport = "NFL" | "NBA" | "MLB" | "NHL" | "NCAAF" | "NCAAB" | "Soccer" | "Tennis" | "MMA" | "Other";
+export type Sport =
+  | "NFL" | "NBA" | "MLB" | "NHL" | "NCAAF" | "NCAAB"
+  | "Soccer" | "Tennis" | "MMA" | "Other";
 
-// ---- Pick ----
+// ---- Pick (matches /api/v1/picks/ response) ----
 export interface Pick {
-  id: string;
+  pick_id: string;
+  match_id: string;
+  sportsbook_id: string | null;
+  run_date: string;          // ISO date
+  market: string;            // e.g. "moneyline", "1x2", "btts", "total"
+  selection: string;         // e.g. "Warriors", "Man City", "Yes"
+  odds_american: number;     // e.g. -150, +110
+  odds_decimal: number;      // e.g. 1.667, 2.100
+  implied_prob: number;      // 0-1
+  grade: Grade | null;
+  stake: number;             // in USD
+  status: PickStatus;
+  source: string;            // "manual" | "pipeline"
+  closing_odds_decimal: number | null;
+  clv: number | null;        // closing_odds_decimal value used as CLV proxy
+  confirmed_at: string | null;
+  resolved_at: string | null;
   created_at: string;
   updated_at: string;
-  sport: Sport;
-  league: string;
-  game_date: string;
-  home_team: string;
-  away_team: string;
-  bet_type: BetType;
-  selection: string;
-  odds: number;              // American odds e.g. -110, +220
-  stake: number;             // Units or $
-  grade: Grade | null;
-  status: PickStatus;
-  clv: number | null;        // Closing Line Value %
-  result_margin: number | null;
-  notes: string | null;
-  sportsbook_id: string | null;
-  parlay_id: string | null;
 }
 
 export interface PickCreate {
-  sport: Sport;
-  league: string;
-  game_date: string;
-  home_team: string;
-  away_team: string;
-  bet_type: BetType;
+  match_id?: string;
+  sportsbook_id?: string | null;
+  run_date: string;
+  market: string;
   selection: string;
-  odds: number;
+  odds_american: number;
   stake: number;
-  notes?: string;
-  sportsbook_id?: string;
+  source?: string;
 }
 
 export interface PickResolve {
   status: Exclude<PickStatus, "pending">;
-  clv?: number;
-  result_margin?: number;
+  closing_odds_decimal?: number | null;
 }
 
-// ---- Parlay ----
+// ---- Parlay (matches /api/v1/parlays/ response) ----
 export interface Parlay {
-  id: string;
+  parlay_id: string;
+  sportsbook_id: string | null;
+  run_date: string;
+  type: string;             // "regular"
+  stake: number;
+  odds_total: number;       // decimal odds
+  potential_return: number;
+  actual_return: number | null;
+  status: PickStatus;
+  picks: Pick[];
   created_at: string;
   updated_at: string;
-  name: string | null;
-  odds: number;
-  stake: number;
-  status: PickStatus;
-  legs: Pick[];
-  payout: number | null;
 }
 
 export interface ParlayCreate {
-  name?: string;
+  sportsbook_id?: string | null;
+  run_date: string;
   stake: number;
   pick_ids: string[];
 }
 
-// ---- Dashboard ----
+// ---- Dashboard (matches /api/v1/dashboard/summary response) ----
+export interface CurrentStreak {
+  type: "won" | "lost";
+  count: number;
+}
+
 export interface KPISummary {
   total_picks: number;
+  resolved_picks: number;
   won: number;
   lost: number;
   push: number;
-  pending: number;
-  win_rate: number | null;          // 0-1, null when no resolved picks
-  roi: number | null;               // % e.g. 12.5, null when no resolved picks
-  units_won: number | null;
-  units_wagered: number | null;
-  avg_odds: number | null;
+  hit_rate: number | null;        // 0-1  (was win_rate)
+  total_stake: number | null;     // in USD (was units_wagered)
+  total_return: number | null;    // in USD (was units_won)
+  roi: number | null;             // e.g. -0.0994
+  current_streak: CurrentStreak | null;  // {type, count} (was streak: number)
+  avg_odds_decimal: number | null;       // (was avg_odds)
   avg_clv: number | null;
-  streak: number | null;            // positive=win streak, negative=loss streak
+  cache_hit?: boolean;
 }
+
+// Alias used by api.ts imports
+export type DashboardSummary = KPISummary;
 
 export interface SegmentStat {
   label: string;
@@ -92,13 +103,9 @@ export interface SegmentStat {
   sample: number;
 }
 
-export interface DashboardData {
-  summary: KPISummary;
-  by_sport: SegmentStat[];
-  by_bet_type: SegmentStat[];
-  by_grade: SegmentStat[];
-  recent_picks: Pick[];
-  recent_parlays: Parlay[];
+export interface DashboardSegments {
+  group_by: string;
+  segments: SegmentStat[];
 }
 
 // ---- Pipeline ----
@@ -122,22 +129,42 @@ export interface RadarOpportunity {
   selection: string;
   odds: number;
   grade: Grade;
-  edge_pct: number;    // Model edge %
-  confidence: number;  // 0-1
+  edge_pct: number;
+  confidence: number;
   notes: string | null;
 }
 
-// ---- Sportsbook ----
+// Alias
+export type PipelineSuggestion = RadarOpportunity;
+
+// ---- Sportsbook (matches /api/v1/sportsbooks/ response) ----
 export interface Sportsbook {
-  id: string;
+  sportsbook_id: string;     // (was id)
   name: string;
-  url: string;
-  logo_url: string | null;
+  currency: string;          // e.g. "USD"
+  odds_format_default: string; // e.g. "american"
   is_active: boolean;
-  api_key_set: boolean;
+  created_at: string;
+  // Fields NOT in backend (kept as optional for forward compat):
+  url?: string;
+  logo_url?: string | null;
+  api_key_set?: boolean;
 }
 
-// ---- Settings ----
+export interface SportsbookUpdate {
+  is_active?: boolean;
+  name?: string;
+  url?: string;
+}
+
+// ---- Config ----
+export interface ConfigEntry {
+  key: string;
+  value: string;
+  description: string | null;
+}
+
+// ---- Settings (legacy shape — used by useSettings hook) ----
 export interface AIConfig {
   model: string;
   temperature: number;
@@ -157,33 +184,11 @@ export interface UserSettings {
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;
-  page: number;
-  page_size: number;
-  pages: number;
+  limit: number;
+  offset: number;
 }
 
 export interface APIError {
   detail: string;
   status_code: number;
-}
-
-// ---- API type aliases (for api.ts compatibility) ----
-
-/** Alias: summary stats returned by /dashboard/summary */
-export type DashboardSummary = KPISummary;
-
-/** Segment breakdown returned by /dashboard/segments */
-export interface DashboardSegments {
-  group_by: string;
-  segments: SegmentStat[];
-}
-
-/** Alias: pipeline suggestion = radar opportunity */
-export type PipelineSuggestion = RadarOpportunity;
-
-/** Single config key/value entry from /config/ */
-export interface ConfigEntry {
-  key: string;
-  value: string;
-  description: string | null;
 }
