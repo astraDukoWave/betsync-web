@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Pick, PickResolve } from "@/lib/types";
+import { isOddsInDeadZone } from "@/lib/utils";
 
 // ---- Create Modal ----
 interface CreatePickModalProps {
@@ -21,6 +22,7 @@ interface CreatePickModalProps {
 
 export function CreatePickModal({ open, onClose, onSubmit }: CreatePickModalProps) {
   const [loading, setLoading] = useState(false);
+  const [oddsError, setOddsError] = useState<string | null>(null);
   const [form, setForm] = useState({
     sport: "NBA",
     league: "NBA",
@@ -36,6 +38,14 @@ export function CreatePickModal({ open, onClose, onSubmit }: CreatePickModalProp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const oddsNum = Number(form.odds);
+    if (isOddsInDeadZone(oddsNum)) {
+      setOddsError("Invalid odds format (dead zone -99 to +99)");
+      return;
+    }
+    setOddsError(null);
+
     setLoading(true);
     try {
       await onSubmit({
@@ -108,7 +118,21 @@ export function CreatePickModal({ open, onClose, onSubmit }: CreatePickModalProp
             </div>
             <div className="space-y-1">
               <Label htmlFor="odds">Odds (American)</Label>
-              <Input id="odds" type="number" value={form.odds} onChange={set("odds")} placeholder="-110" required />
+              <Input
+                id="odds"
+                type="number"
+                value={form.odds}
+                onChange={(e) => {
+                  setOddsError(null);
+                  set("odds")(e);
+                }}
+                placeholder="-110"
+                required
+                className={oddsError ? "border-rose-500 focus-visible:ring-rose-500" : ""}
+              />
+              {oddsError && (
+                <p className="text-xs text-rose-500 mt-1">{oddsError}</p>
+              )}
             </div>
             <div className="space-y-1">
               <Label htmlFor="stake">Stake (units)</Label>

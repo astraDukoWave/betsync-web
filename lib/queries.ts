@@ -18,8 +18,9 @@ import {
   updateSportsbook,
   getConfig,
   updateConfig,
+  type SportsbookUpdate,
 } from "./api";
-import type { PickCreate, PickResolve, ParlayCreate, Sportsbook } from "./types";
+import type { PickCreate, PickResolve, ParlayCreate } from "./types";
 
 const POLLING_INTERVAL =
   Number(process.env.NEXT_PUBLIC_POLLING_INTERVAL_MS) || 2000;
@@ -173,7 +174,7 @@ export function useSportsbooks() {
 export function useUpdateSportsbook() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Sportsbook> }) =>
+    mutationFn: ({ id, data }: { id: string; data: SportsbookUpdate }) =>
       updateSportsbook(id, data),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.sportsbooks }),
   });
