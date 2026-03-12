@@ -9,7 +9,7 @@ export function SportsbookCard({ sportsbook }: { sportsbook: Sportsbook }) {
   const toggle = useToggleSportsbook();
 
   const handleToggle = () => {
-    toggle.mutate({ id: sportsbook.id, is_active: !sportsbook.is_active });
+    toggle.mutate({ id: sportsbook.sportsbook_id, is_active: !sportsbook.is_active });
   };
 
   return (

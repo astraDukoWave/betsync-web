@@ -59,7 +59,7 @@ export default function SettingsPage() {
           {sportsbooks.data && (
             <div className="grid gap-3 sm:grid-cols-2">
               {sportsbooks.data.map((sb) => (
-                <SportsbookCard key={sb.id} sportsbook={sb} />
+                <SportsbookCard key={sb.sportsbook_id} sportsbook={sb} />
               ))}
             </div>
           )}
