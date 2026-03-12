@@ -1,44 +1,58 @@
+function safeNum(v: number | null | undefined): number | null {
+  if (v == null || Number.isNaN(v)) return null;
+  return v;
+}
+
 /**
  * formatOdds: converts American odds to display string
  * e.g. -110 -> "-110" | +220 -> "+220"
  */
-export function formatOdds(odds: number): string {
-  return odds > 0 ? `+${odds}` : String(odds);
+export function formatOdds(odds: number | null | undefined): string {
+  const n = safeNum(odds);
+  if (n === null) return "-";
+  return n > 0 ? `+${n}` : String(n);
 }
 
 /**
  * formatROI: formats ROI percentage
  * e.g. 12.5 -> "+12.50%" | -3.2 -> "-3.20%"
  */
-export function formatROI(roi: number): string {
-  const sign = roi >= 0 ? "+" : "";
-  return `${sign}${roi.toFixed(2)}%`;
+export function formatROI(roi: number | null | undefined): string {
+  const n = safeNum(roi);
+  if (n === null) return "+0.00%";
+  const sign = n >= 0 ? "+" : "";
+  return `${sign}${n.toFixed(2)}%`;
 }
 
 /**
  * formatCLV: formats Closing Line Value
  * e.g. 2.5 -> "+2.50%" | -1.3 -> "-1.30%"
  */
-export function formatCLV(clv: number | null): string {
-  if (clv === null) return "N/A";
-  const sign = clv >= 0 ? "+" : "";
-  return `${sign}${clv.toFixed(2)}%`;
+export function formatCLV(clv: number | null | undefined): string {
+  const n = safeNum(clv);
+  if (n === null) return "-";
+  const sign = n >= 0 ? "+" : "";
+  return `${sign}${n.toFixed(2)}%`;
 }
 
 /**
  * formatWinRate: 0-1 -> "63.5%"
  */
-export function formatWinRate(rate: number): string {
-  return `${(rate * 100).toFixed(1)}%`;
+export function formatWinRate(rate: number | null | undefined): string {
+  const n = safeNum(rate);
+  if (n === null) return "0.0%";
+  return `${(n * 100).toFixed(1)}%`;
 }
 
 /**
  * formatUnits: formats unit P&L
  * e.g. 3.45 -> "+3.45u" | -1.2 -> "-1.20u"
  */
-export function formatUnits(units: number): string {
-  const sign = units >= 0 ? "+" : "";
-  return `${sign}${units.toFixed(2)}u`;
+export function formatUnits(units: number | null | undefined): string {
+  const n = safeNum(units);
+  if (n === null) return "+0.00u";
+  const sign = n >= 0 ? "+" : "";
+  return `${sign}${n.toFixed(2)}u`;
 }
 
 /**
@@ -80,7 +94,8 @@ export function impliedProbability(odds: number): number {
 /**
  * formatStreak: +3 -> "W3" | -2 -> "L2" | 0 -> "-"
  */
-export function formatStreak(streak: number): string {
-  if (streak === 0) return "-";
-  return streak > 0 ? `W${streak}` : `L${Math.abs(streak)}`;
+export function formatStreak(streak: number | null | undefined): string {
+  const n = safeNum(streak);
+  if (n === null || n === 0) return "-";
+  return n > 0 ? `W${n}` : `L${Math.abs(n)}`;
 }

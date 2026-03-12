@@ -45,9 +45,18 @@ export function DashboardSummary() {
   }
 
   const s = data.summary;
-  const roiTrend = s.roi >= 0 ? "up" : "down";
-  const clvTrend = (s.avg_clv ?? 0) >= 0 ? "up" : "down";
-  const unitsPnL = s.units_won ?? (s.total_stake ?? 0) * (s.roi ?? 0);
+
+  const roi = s.roi ?? 0;
+  const avgClv = s.avg_clv ?? 0;
+  const unitsPnL = s.units_won ?? (s.units_wagered ?? 0) * (roi / 100);
+  const streak = s.streak ?? 0;
+  const winRate = s.win_rate ?? 0;
+
+  function numTrend(v: number): "up" | "down" | "neutral" {
+    if (v > 0) return "up";
+    if (v < 0) return "down";
+    return "neutral";
+  }
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -56,40 +65,38 @@ export function DashboardSummary() {
         value={formatWinRate(s.win_rate)}
         sub={`${s.won}W / ${s.lost}L`}
         icon={Target}
-        trend={s.win_rate >= 0.52 ? "up" : "neutral"}
+        trend={winRate > 0.52 ? "up" : "neutral"}
       />
       <KPICard
         label="ROI"
         value={formatROI(s.roi)}
-        icon={s.roi >= 0 ? TrendingUp : TrendingDown}
-        trend={roiTrend}
+        icon={roi >= 0 ? TrendingUp : TrendingDown}
+        trend={numTrend(roi)}
       />
       <KPICard
         label="Units P&L"
         value={formatUnits(unitsPnL)}
         sub={`${s.total_picks} picks`}
         icon={BarChart2}
-        trend={unitsPnL >= 0 ? "up" : "down"}
+        trend={numTrend(unitsPnL)}
       />
       <KPICard
         label="Avg Odds"
-        value={formatOdds(Math.round(s.avg_odds))}
+        value={formatOdds(s.avg_odds)}
         icon={Zap}
       />
       <KPICard
         label="Avg CLV"
         value={formatCLV(s.avg_clv)}
         icon={TrendingUp}
-        trend={clvTrend}
+        trend={numTrend(avgClv)}
       />
       <KPICard
         label="Streak"
         value={formatStreak(s.streak)}
         sub={s.pending > 0 ? `${s.pending} pending` : undefined}
         icon={Clock}
-        trend={
-          s.streak > 0 ? "up" : s.streak < 0 ? "down" : "neutral"
-        }
+        trend={numTrend(streak)}
       />
     </div>
   );

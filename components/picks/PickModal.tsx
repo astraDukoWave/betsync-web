@@ -58,8 +58,8 @@ export function CreatePickModal({ open, onClose, onSubmit }: CreatePickModalProp
         selection: form.selection,
         odds: Number(form.odds),
         stake: Number(form.stake),
-        notes: form.notes || undefined,
-        sportsbook_id: undefined,
+        notes: form.notes || null,
+        sportsbook_id: null,
       });
       onClose();
     } finally {
