@@ -11,7 +11,7 @@ const TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_PIPELINE_TIMEOUT_MS) || 60_000
 export function PipelineButton() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [timedOut, setTimedOut] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(); 
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined); 
 
   const trigger = useTriggerPipeline();
   const job = usePipelineJob(jobId);

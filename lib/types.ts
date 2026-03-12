@@ -76,13 +76,13 @@ export interface KPISummary {
   lost: number;
   push: number;
   pending: number;
-  win_rate: number;          // 0-1
-  roi: number;               // % e.g. 12.5
-  units_won: number;
-  units_wagered: number;
-  avg_odds: number;
+  win_rate: number | null;          // 0-1, null when no resolved picks
+  roi: number | null;               // % e.g. 12.5, null when no resolved picks
+  units_won: number | null;
+  units_wagered: number | null;
+  avg_odds: number | null;
   avg_clv: number | null;
-  streak: number;            // positive=win streak, negative=loss streak
+  streak: number | null;            // positive=win streak, negative=loss streak
 }
 
 export interface SegmentStat {
