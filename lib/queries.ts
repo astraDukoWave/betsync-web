@@ -18,9 +18,10 @@ import {
   updateSportsbook,
   getConfig,
   updateConfig,
+    getFiscalSummary,
   type SportsbookUpdate,
 } from "./api";
-import type { PickCreate, PickResolve, ParlayCreate } from "./types";
+import type { PickCreate, PickResolve, ParlayCreate, FiscalSummaryResponse } from "./types";
 
 const POLLING_INTERVAL =
   Number(process.env.NEXT_PUBLIC_POLLING_INTERVAL_MS) || 2000;
@@ -37,6 +38,7 @@ export const keys = {
   pipelineSuggestions: ["pipeline", "suggestions"] as const,
   sportsbooks: ["sportsbooks"] as const,
   config: ["config"] as const,
+    fiscal: ["fiscal"] as const,
 };
 
 // ---- Dashboard ----
@@ -222,5 +224,15 @@ export function useToggleSportsbook() {
     mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
       updateSportsbook(id, { is_active }),
     onSuccess: () => qc.invalidateQueries({ queryKey: keys.sportsbooks }),
+  });
+}
+
+
+// ---- Fiscal ----
+export function useFiscalSummary(taxYear: number) {
+  return useQuery<FiscalSummaryResponse>({
+    queryKey: [keys.fiscal, taxYear],
+    queryFn: () => getFiscalSummary(taxYear),
+    staleTime: 5 * 60 * 1000, // 5 min — fiscal data changes infrequently
   });
 }
