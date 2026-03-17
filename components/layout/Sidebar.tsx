@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -9,12 +8,14 @@ import {
   BookOpen,
   Settings,
   TrendingUp,
+  BarChart3,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/pipeline", label: "Pipeline", icon: Radar },
   { href: "/picks", label: "Picks & Parlays", icon: BookOpen },
+  { href: "/fiscal", label: "Fiscal", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -34,31 +35,24 @@ export function Sidebar() {
       {/* Nav */}
       <nav className="flex flex-1 flex-col gap-1 p-3">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(`${href}/`);
+          const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "bg-surface-elevated text-foreground font-medium"
-                  : "text-muted-foreground hover:bg-surface-elevated hover:text-foreground"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
-              <Icon className="h-4 w-4 flex-shrink-0" />
+              <Icon className="h-4 w-4" />
               {label}
             </Link>
           );
         })}
       </nav>
-
-      {/* Footer */}
-      <div className="border-t border-border p-3">
-        <p className="text-xs text-muted-foreground px-3">
-          BetSync v0.2.0
-        </p>
-      </div>
     </aside>
   );
 }
