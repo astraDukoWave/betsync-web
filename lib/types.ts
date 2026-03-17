@@ -192,3 +192,20 @@ export interface APIError {
   detail: string;
   status_code: number;
 }
+
+
+// ---- Fiscal (matches /api/v1/fiscal/ responses) ----
+export interface FiscalSummaryResponse {
+  tax_year: number;
+  jurisdiction: string;           // e.g. "MX_SAT"
+  gross_winnings_mxn: number;     // profit from won picks (stake*odds - stake)
+  gross_losses_mxn: number;       // stake sum of lost picks
+  net_gambling_income_mxn: number; // gross_winnings - gross_losses
+  total_picks_won: number;
+  total_picks_lost: number;
+  total_deposits_mxn: number;     // deposit + bonus txns * exchange_rate
+  total_withdrawals_mxn: number;  // withdrawal txns * exchange_rate
+  net_cashflow_mxn: number;       // total_deposits - total_withdrawals
+  taxable_base_estimate_mxn: number; // max(net_gambling_income, 0)
+  currency: string;               // "MXN"
+}
