@@ -12,6 +12,7 @@ import type {
   Sportsbook,
   SportsbookUpdate,
   ConfigEntry,
+    FiscalSummaryResponse,
 } from "./types";
 
 const BASE_URL =
@@ -117,3 +118,18 @@ export const updateConfig = (key: string, value: string) =>
     method: "PATCH",
     body: JSON.stringify({ value }),
   });
+
+
+// ---- Fiscal ----
+export const getFiscalSummary = (taxYear: number) =>
+  request<FiscalSummaryResponse>(`/fiscal/summary?tax_year=${taxYear}`);
+
+export const downloadFiscalCSV = (taxYear: number): void => {
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1"}/fiscal/export/csv?tax_year=${taxYear}`;
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `betsync_fiscal_${taxYear}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};
