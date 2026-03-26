@@ -4,18 +4,19 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  Radar,
   BookOpen,
   Settings,
   TrendingUp,
-  BarChart3,
+  Landmark,
+  Scale,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/pipeline", label: "Pipeline", icon: Radar },
-  { href: "/picks", label: "Picks & Parlays", icon: BookOpen },
-  { href: "/fiscal", label: "Fiscal", icon: BarChart3 },
+  { href: "/ledger", label: "Ledger", icon: BookOpen },
+  { href: "/reconciliation", label: "Reconciliation", icon: Scale },
+  { href: "/fiscal", label: "Fiscal", icon: Landmark },
+  { href: "/picks", label: "Picks (Context)", icon: TrendingUp },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -24,15 +25,11 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-screen w-60 flex-col border-r border-border bg-surface">
-      {/* Logo */}
       <div className="flex h-16 items-center gap-2 border-b border-border px-5">
         <TrendingUp className="h-5 w-5 text-primary" />
-        <span className="font-semibold tracking-tight text-foreground">
-          BetSync
-        </span>
+        <span className="font-semibold tracking-tight text-foreground">BetSync</span>
       </div>
 
-      {/* Nav */}
       <nav className="flex flex-1 flex-col gap-1 p-3">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
