@@ -2,10 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getDashboardSummary,
   getDashboardSegments,
-  getPicks,
   getPick,
-  createPick,
-  resolvePick,
   deletePick,
   confirmPick,
   getParlays,
@@ -18,10 +15,16 @@ import {
   updateSportsbook,
   getConfig,
   updateConfig,
-    getFiscalSummary,
-  type SportsbookUpdate,
+  getFiscalSummary,
 } from "./api";
-import type { PickCreate, PickResolve, ParlayCreate, FiscalSummaryResponse } from "./types";
+import {
+  listPicks,
+  createPickRequest,
+  resolvePickRequest,
+  type ListPicksParams,
+} from "./picksApi";
+import { financialKeys } from "./financialQueries";
+import type { PickCreate, PickResolve, ParlayCreate, FiscalSummaryResponse, SportsbookUpdate } from "./types";
 
 const POLLING_INTERVAL =
   Number(process.env.NEXT_PUBLIC_POLLING_INTERVAL_MS) || 2000;
@@ -60,10 +63,10 @@ export function useDashboardSegments(params?: Parameters<typeof getDashboardSegm
 }
 
 // ---- Picks ----
-export function usePicks(params?: Parameters<typeof getPicks>[0]) {
+export function usePicks(params?: ListPicksParams) {
   return useQuery({
     queryKey: keys.picks(params),
-    queryFn: () => getPicks(params),
+    queryFn: () => listPicks(params),
   });
 }
 
@@ -78,8 +81,12 @@ export function usePick(id: string) {
 export function useCreatePick() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: PickCreate) => createPick(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["picks"] }),
+    mutationFn: (data: PickCreate) => createPickRequest(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["picks"] });
+      qc.invalidateQueries({ queryKey: financialKeys.dashboard });
+      qc.invalidateQueries({ queryKey: ["financial", "ledger"] });
+    },
   });
 }
 
@@ -87,10 +94,12 @@ export function useResolvePick() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: PickResolve }) =>
-      resolvePick(id, data),
+      resolvePickRequest(id, data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["picks"] });
       qc.invalidateQueries({ queryKey: keys.dashboard });
+      qc.invalidateQueries({ queryKey: financialKeys.dashboard });
+      qc.invalidateQueries({ queryKey: ["financial", "ledger"] });
     },
   });
 }
