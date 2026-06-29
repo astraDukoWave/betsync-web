@@ -29,13 +29,13 @@ export function SportsbookCard({ sportsbook }: { sportsbook: Sportsbook }) {
           <div>
             <p className="font-medium text-sm text-foreground">{sportsbook.name}</p>
             <div className="flex items-center gap-1">
-              {getSafeUrl(sportsbook.url) === "#" ? (
+              {getSafeUrl(sportsbook.url ?? "") === "#" ? (
                 <span className="text-xs text-muted-foreground">
-                  {sportsbook.url}
+                  {sportsbook.url ?? "—"}
                 </span>
               ) : (
                 <a
-                  href={getSafeUrl(sportsbook.url)}
+                  href={getSafeUrl(sportsbook.url ?? "")}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-0.5"
