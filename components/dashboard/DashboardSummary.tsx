@@ -74,7 +74,7 @@ export function DashboardSummary() {
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {/* Hit Rate */}
       <KPICard
-        title="Hit Rate"
+        label="Hit Rate"
         value={formatWinRate(winRate)}
         icon={Target}
         trend={winRate > 0.52 ? "up" : "neutral"}
@@ -82,7 +82,7 @@ export function DashboardSummary() {
 
       {/* ROI */}
       <KPICard
-        title="ROI"
+        label="ROI"
         value={formatROI(roi)}
         icon={roi >= 0 ? TrendingUp : TrendingDown}
         trend={numTrend(roi)}
@@ -90,7 +90,7 @@ export function DashboardSummary() {
 
       {/* P&L */}
       <KPICard
-        title="P&L"
+        label="P&L"
         value={`$${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)}`}
         icon={pnl >= 0 ? TrendingUp : TrendingDown}
         trend={numTrend(pnl)}
@@ -98,7 +98,7 @@ export function DashboardSummary() {
 
       {/* Avg Odds */}
       <KPICard
-        title="Avg Odds"
+        label="Avg Odds"
         value={formatOdds(s.avg_odds_decimal ?? null)}
         icon={BarChart2}
         trend="neutral"
@@ -106,7 +106,7 @@ export function DashboardSummary() {
 
       {/* Avg CLV */}
       <KPICard
-        title="Avg CLV"
+        label="Avg CLV"
         value={formatCLV(avgClv)}
         icon={Zap}
         trend={numTrend(avgClv)}
@@ -114,9 +114,9 @@ export function DashboardSummary() {
 
       {/* Streak */}
       <KPICard
-        title="Streak"
+        label="Streak"
         value={streakLabel}
-        subtitle={s.total_picks > 0 ? `${s.total_picks} total picks` : undefined}
+        sub={s.total_picks > 0 ? `${s.total_picks} total picks` : undefined}
         icon={Clock}
         trend={numTrend(streakNum)}
       />

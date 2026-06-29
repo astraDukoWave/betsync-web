@@ -120,6 +120,47 @@ export interface PipelineJob {
   error: string | null;
 }
 
+// Raw response from /api/v1/pipeline/suggestions
+export interface BackendPick {
+  pick_id: string
+  match_id: string
+  sportsbook_id: string
+  run_date: string
+  market: string
+  selection: string
+  odds_american: number
+  odds_decimal: string
+  implied_prob: string
+  grade: string
+  stake: number | null
+  status: string
+  source: string
+  closing_odds_decimal: string | null
+  clv: string | null
+  confirmed_at: string | null
+  resolved_at: string | null
+  created_at: string
+  updated_at: string
+  user_id: string | null
+}
+
+// Adapter: BackendPick → RadarOpportunity
+export function adaptPickToRadarOpportunity(pick: BackendPick): RadarOpportunity {
+  return {
+    id: pick.pick_id,
+    home_team: pick.selection,         // best effort — backend no join yet
+    away_team: 'vs ' + pick.market,    // best effort — backend no join yet
+    sport: 'Soccer' as any,
+    game_date: pick.run_date,
+    selection: pick.selection,
+    odds: pick.odds_american,
+    grade: pick.grade as any,
+    edge_pct: parseFloat(pick.implied_prob) * 100,
+    confidence: parseFloat(pick.implied_prob) * 100,
+    notes: `Market: ${pick.market} | Status: ${pick.status}`,
+  }
+}
+
 export interface RadarOpportunity {
   id: string;
   sport: Sport;
@@ -136,6 +177,12 @@ export interface RadarOpportunity {
 
 // Alias
 export type PipelineSuggestion = RadarOpportunity;
+
+// ---- Radar UI Filters (client-side only, not sent to backend) ----
+export type RadarFilters = {
+  minGrade?: "A" | "B" | "C";
+  sortBy?: "edge_pct" | "confidence" | "game_date";
+};
 
 // ---- Sportsbook (matches /api/v1/sportsbooks/ response) ----
 export interface Sportsbook {

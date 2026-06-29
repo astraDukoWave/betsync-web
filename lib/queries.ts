@@ -24,7 +24,8 @@ import {
   type ListPicksParams,
 } from "./picksApi";
 import { financialKeys } from "./financialQueries";
-import type { PickCreate, PickResolve, ParlayCreate, FiscalSummaryResponse, SportsbookUpdate } from "./types";
+import type { PickCreate, PickResolve, ParlayCreate, FiscalSummaryResponse, SportsbookUpdate, BackendPick } from "./types";
+import { adaptPickToRadarOpportunity } from "./types";
 
 const POLLING_INTERVAL =
   Number(process.env.NEXT_PUBLIC_POLLING_INTERVAL_MS) || 2000;
@@ -170,7 +171,10 @@ export function usePipelineJob(jobId: string | null) {
 export function usePipelineSuggestions() {
   return useQuery({
     queryKey: keys.pipelineSuggestions,
-    queryFn: getPipelineSuggestions,
+    queryFn: async () => {
+      const data = await getPipelineSuggestions() as unknown as BackendPick[];
+      return data.map(adaptPickToRadarOpportunity);
+    },
   });
 }
 

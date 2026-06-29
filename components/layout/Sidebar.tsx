@@ -9,6 +9,8 @@ import {
   TrendingUp,
   Landmark,
   Scale,
+  Radar,
+  Activity,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -16,6 +18,8 @@ const NAV_ITEMS = [
   { href: "/ledger", label: "Ledger", icon: BookOpen },
   { href: "/reconciliation", label: "Reconciliation", icon: Scale },
   { href: "/fiscal", label: "Fiscal", icon: Landmark },
+  { href: "/radar", label: "Radar", icon: Radar },
+  { href: "/pipeline", label: "Pipeline", icon: Activity },
   { href: "/picks", label: "Picks (Context)", icon: TrendingUp },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
