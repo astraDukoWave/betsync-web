@@ -10,38 +10,37 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Pick, PickResolve } from "@/lib/types";
+import type { Pick, PickCreate, PickResolve } from "@/lib/types";
 import { isOddsInDeadZone } from "@/lib/utils";
 
 // ---- Create Modal ----
 interface CreatePickModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<Pick, "id" | "created_at" | "updated_at" | "status" | "grade" | "clv" | "result_margin" | "parlay_id">) => Promise<void>;
+  onSubmit: (data: PickCreate) => Promise<void>;
 }
 
-export function CreatePickModal({ open, onClose, onSubmit }: CreatePickModalProps) {
+export function CreatePickModal({
+  open,
+  onClose,
+  onSubmit,
+}: CreatePickModalProps) {
   const [loading, setLoading] = useState(false);
   const [oddsError, setOddsError] = useState<string | null>(null);
   const [form, setForm] = useState({
-    sport: "NBA",
-    league: "NBA",
-    game_date: "",
-    home_team: "",
-    away_team: "",
-    bet_type: "straight",
+    run_date: new Date().toISOString().split("T")[0],
+    market: "moneyline",
     selection: "",
-    odds: "",
+    odds_american: "",
     stake: "",
-    notes: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const oddsNum = Number(form.odds);
+    const oddsNum = Number(form.odds_american);
     if (isOddsInDeadZone(oddsNum)) {
-      setOddsError("Invalid odds format (dead zone -99 to +99)");
+      setOddsError("Odds inválidos (zona muerta: -99 a +99)");
       return;
     }
     setOddsError(null);
@@ -49,103 +48,120 @@ export function CreatePickModal({ open, onClose, onSubmit }: CreatePickModalProp
     setLoading(true);
     try {
       await onSubmit({
-        sport: form.sport as any,
-        league: form.league,
-        game_date: form.game_date,
-        home_team: form.home_team,
-        away_team: form.away_team,
-        bet_type: form.bet_type as any,
+        run_date: form.run_date,
+        market: form.market,
         selection: form.selection,
-        odds: Number(form.odds),
+        odds_american: oddsNum,
         stake: Number(form.stake),
-        notes: form.notes || null,
-        sportsbook_id: null,
+        source: "manual",
       });
       onClose();
+      setForm({
+        run_date: new Date().toISOString().split("T")[0],
+        market: "moneyline",
+        selection: "",
+        odds_american: "",
+        stake: "",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set =
+    (k: string) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm((f) => ({ ...f, [k]: e.target.value }));
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="bg-surface border-border max-w-lg">
+      <DialogContent className="bg-surface border-border max-w-md">
         <DialogHeader>
-          <DialogTitle>New Pick</DialogTitle>
+          <DialogTitle>Nuevo Pick</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="sport">Sport</Label>
-              <select id="sport" value={form.sport} onChange={set("sport")}
-                className="w-full rounded-md border border-border bg-surface-elevated px-3 py-2 text-sm text-foreground">
-                {["NFL","NBA","MLB","NHL","NCAAF","NCAAB","Soccer","Tennis","MMA","Other"].map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+              <Label htmlFor="run_date">Fecha</Label>
+              <Input
+                id="run_date"
+                type="date"
+                value={form.run_date}
+                onChange={set("run_date")}
+                required
+              />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="bet_type">Bet Type</Label>
-              <select id="bet_type" value={form.bet_type} onChange={set("bet_type")}
-                className="w-full rounded-md border border-border bg-surface-elevated px-3 py-2 text-sm text-foreground">
-                {["straight","parlay","teaser","prop"].map(t => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
+              <Label htmlFor="market">Mercado</Label>
+              <select
+                id="market"
+                value={form.market}
+                onChange={set("market")}
+                className="w-full rounded-md border border-border bg-surface-elevated px-3 py-2 text-sm text-foreground"
+              >
+                {["moneyline", "spread", "total", "1x2", "btts", "prop"].map(
+                  (m) => (
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
+                  )
+                )}
               </select>
             </div>
           </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="selection">Selección</Label>
+            <Input
+              id="selection"
+              value={form.selection}
+              onChange={set("selection")}
+              placeholder="e.g. Lakers -4.5"
+              required
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="home_team">Home Team</Label>
-              <Input id="home_team" value={form.home_team} onChange={set("home_team")} required />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="away_team">Away Team</Label>
-              <Input id="away_team" value={form.away_team} onChange={set("away_team")} required />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="selection">Selection</Label>
-            <Input id="selection" value={form.selection} onChange={set("selection")} placeholder="e.g. Lakers -4.5" required />
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="game_date">Game Date</Label>
-              <Input id="game_date" type="date" value={form.game_date} onChange={set("game_date")} required />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="odds">Odds (American)</Label>
+              <Label htmlFor="odds_american">Odds (American)</Label>
               <Input
-                id="odds"
+                id="odds_american"
                 type="number"
-                value={form.odds}
+                value={form.odds_american}
                 onChange={(e) => {
                   setOddsError(null);
-                  set("odds")(e);
+                  set("odds_american")(e);
                 }}
                 placeholder="-110"
                 required
-                className={oddsError ? "border-rose-500 focus-visible:ring-rose-500" : ""}
+                className={oddsError ? "border-rose-500" : ""}
               />
               {oddsError && (
                 <p className="text-xs text-rose-500 mt-1">{oddsError}</p>
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="stake">Stake (units)</Label>
-              <Input id="stake" type="number" step="0.5" value={form.stake} onChange={set("stake")} placeholder="1" required />
+              <Label htmlFor="stake">Stake (USD)</Label>
+              <Input
+                id="stake"
+                type="number"
+                step="0.5"
+                min="0.5"
+                value={form.stake}
+                onChange={set("stake")}
+                placeholder="100"
+                required
+              />
             </div>
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="notes">Notes (optional)</Label>
-            <Input id="notes" value={form.notes} onChange={set("notes")} />
-          </div>
+
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Create Pick"}</Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Guardando..." : "Crear Pick"}
+            </Button>
           </div>
         </form>
       </DialogContent>
@@ -160,19 +176,27 @@ interface ResolvePickModalProps {
   onSubmit: (id: string, data: PickResolve) => Promise<void>;
 }
 
-export function ResolvePickModal({ pick, onClose, onSubmit }: ResolvePickModalProps) {
+export function ResolvePickModal({
+  pick,
+  onClose,
+  onSubmit,
+}: ResolvePickModalProps) {
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ status: "won", clv: "", result_margin: "" });
+  const [form, setForm] = useState({
+    status: "won",
+    closing_odds_decimal: "",
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!pick) return;
     setLoading(true);
     try {
-      await onSubmit(pick.id, {
-        status: form.status as any,
-        clv: form.clv ? Number(form.clv) : undefined,
-        result_margin: form.result_margin ? Number(form.result_margin) : undefined,
+      await onSubmit(pick.pick_id, {
+        status: form.status as PickResolve["status"],
+        closing_odds_decimal: form.closing_odds_decimal
+          ? Number(form.closing_odds_decimal)
+          : undefined,
       });
       onClose();
     } finally {
@@ -180,43 +204,57 @@ export function ResolvePickModal({ pick, onClose, onSubmit }: ResolvePickModalPr
     }
   };
 
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set =
+    (k: string) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+      setForm((f) => ({ ...f, [k]: e.target.value }));
 
   return (
     <Dialog open={!!pick} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="bg-surface border-border max-w-sm">
         <DialogHeader>
-          <DialogTitle>Resolve Pick</DialogTitle>
+          <DialogTitle>Resolver Pick</DialogTitle>
         </DialogHeader>
         {pick && (
-          <div className="text-sm text-muted-foreground mb-2">
-            {pick.away_team} @ {pick.home_team} — {pick.selection}
-          </div>
+          <p className="text-sm text-muted-foreground mb-2">
+            {pick.selection} — {pick.market} ({pick.run_date})
+          </p>
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <Label>Result</Label>
-            <select value={form.status} onChange={set("status")}
-              className="w-full rounded-md border border-border bg-surface-elevated px-3 py-2 text-sm text-foreground">
-              {["won","lost","push","void"].map(s => (
-                <option key={s} value={s}>{s}</option>
+            <Label>Resultado</Label>
+            <select
+              value={form.status}
+              onChange={set("status")}
+              className="w-full rounded-md border border-border bg-surface-elevated px-3 py-2 text-sm text-foreground"
+            >
+              {["won", "lost", "push", "void"].map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="clv">CLV % (optional)</Label>
-              <Input id="clv" type="number" step="0.1" value={form.clv} onChange={set("clv")} placeholder="+2.5" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="result_margin">Margin (optional)</Label>
-              <Input id="result_margin" type="number" step="0.5" value={form.result_margin} onChange={set("result_margin")} />
-            </div>
+          <div className="space-y-1">
+            <Label htmlFor="closing_odds_decimal">
+              Closing odds decimal (opcional)
+            </Label>
+            <Input
+              id="closing_odds_decimal"
+              type="number"
+              step="0.001"
+              value={form.closing_odds_decimal}
+              onChange={set("closing_odds_decimal")}
+              placeholder="1.909"
+            />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Resolve"}</Button>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Guardando..." : "Resolver"}
+            </Button>
           </div>
         </form>
       </DialogContent>
