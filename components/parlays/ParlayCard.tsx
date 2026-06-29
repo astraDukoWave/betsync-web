@@ -12,15 +12,12 @@ interface ParlayCardProps {
   onOpen?: (parlay: Parlay) => void;
 }
 
-function americanToDecimal(odds: number): number {
-  if (odds > 0) return odds / 100 + 1;
-  return 100 / Math.abs(odds) + 1;
-}
-
 export function ParlayCard({ parlay, onOpen }: ParlayCardProps) {
   const [expanded, setExpanded] = useState(false);
 
-  const potentialPayout = parlay.payout ?? parlay.stake * americanToDecimal(parlay.odds);
+  // potential_return is the pre-computed payout from the backend (Parlay type).
+  // odds_total is decimal odds. parlay_id is the PK.
+  const potentialPayout = parlay.potential_return;
 
   return (
     <div className="rounded-xl border border-border bg-surface overflow-hidden">
@@ -38,41 +35,46 @@ export function ParlayCard({ parlay, onOpen }: ParlayCardProps) {
           )}
           <div className="text-left">
             <p className="text-sm font-medium text-foreground">
-              {parlay.name ?? `Parlay #${parlay.id.slice(0, 8)}`}
+              Parlay #{parlay.parlay_id.slice(0, 8)}
             </p>
             <p className="text-xs text-muted-foreground">
-              {parlay.legs.length} legs · {formatDate(parlay.created_at)}
+              {parlay.picks.length} legs · {formatDate(parlay.created_at)}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <OddsChip odds={parlay.odds} />
+          <OddsChip odds={parlay.odds_total} />
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Stake</p>
             <p className="text-sm font-mono text-foreground">{parlay.stake}u</p>
           </div>
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Payout</p>
-            <p className="text-sm font-mono text-foreground">{potentialPayout.toFixed(2)}u</p>
+            <p className="text-sm font-mono text-foreground">
+              {potentialPayout.toFixed(2)}u
+            </p>
           </div>
           <StatusBadge status={parlay.status} />
         </div>
       </button>
 
-      {/* Legs */}
+      {/* Legs (picks) */}
       {expanded && (
         <div className="border-t border-border divide-y divide-border">
-          {parlay.legs.map((leg) => (
-            <div key={leg.id} className="flex items-center justify-between px-6 py-3 bg-surface-elevated/30">
+          {parlay.picks.map((pick) => (
+            <div
+              key={pick.pick_id}
+              className="flex items-center justify-between px-6 py-3 bg-surface-elevated/30"
+            >
               <div className="text-sm">
-                <p className="text-foreground">{leg.selection}</p>
+                <p className="text-foreground">{pick.selection}</p>
                 <p className="text-xs text-muted-foreground">
-                  {leg.away_team} @ {leg.home_team} · {leg.sport}
+                  {pick.market} · {pick.run_date}
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <OddsChip odds={leg.odds} />
-                <StatusBadge status={leg.status} />
+                <OddsChip odds={pick.odds_american} />
+                <StatusBadge status={pick.status} />
               </div>
             </div>
           ))}

@@ -16,22 +16,19 @@ interface ParlayModalProps {
   onClose: () => void;
 }
 
-function americanToDecimal(odds: number): number {
-  if (odds > 0) return odds / 100 + 1;
-  return 100 / Math.abs(odds) + 1;
-}
-
 export function ParlayModal({ parlay, onClose }: ParlayModalProps) {
   if (!parlay) return null;
 
-  const potentialPayout = parlay.payout ?? parlay.stake * americanToDecimal(parlay.odds);
+  // potential_return is the pre-computed payout from the backend.
+  // odds_total is decimal odds. parlay_id is the PK.
+  const potentialPayout = parlay.potential_return;
 
   return (
     <Dialog open={!!parlay} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="bg-surface border-border max-w-xl">
         <DialogHeader>
           <DialogTitle>
-            {parlay.name ?? `Parlay #${parlay.id.slice(0, 8)}`}
+            Parlay #{parlay.parlay_id.slice(0, 8)}
           </DialogTitle>
         </DialogHeader>
 
@@ -43,11 +40,13 @@ export function ParlayModal({ parlay, onClose }: ParlayModalProps) {
           </div>
           <div className="rounded-md bg-surface-elevated p-3 space-y-1">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Odds</p>
-            <OddsChip odds={parlay.odds} />
+            <OddsChip odds={parlay.odds_total} />
           </div>
           <div className="rounded-md bg-surface-elevated p-3 space-y-1">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Stake / Payout</p>
-            <p className="font-mono text-foreground">{parlay.stake}u / {potentialPayout.toFixed(2)}u</p>
+            <p className="font-mono text-foreground">
+              {parlay.stake}u / {potentialPayout.toFixed(2)}u
+            </p>
           </div>
         </div>
 
@@ -57,26 +56,29 @@ export function ParlayModal({ parlay, onClose }: ParlayModalProps) {
           <span>Updated: {formatDate(parlay.updated_at)}</span>
         </div>
 
-        {/* Legs */}
+        {/* Legs (picks) */}
         <div className="space-y-2">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Legs ({parlay.legs.length})
+            Legs ({parlay.picks.length})
           </h3>
           <div className="divide-y divide-border rounded-lg border border-border overflow-hidden">
-            {parlay.legs.map((leg, i) => (
-              <div key={leg.id} className="flex items-center justify-between px-4 py-3 bg-surface-elevated/30">
+            {parlay.picks.map((pick, i) => (
+              <div
+                key={pick.pick_id}
+                className="flex items-center justify-between px-4 py-3 bg-surface-elevated/30"
+              >
                 <div>
                   <p className="text-sm text-foreground">
                     <span className="text-muted-foreground mr-2">{i + 1}.</span>
-                    {leg.selection}
+                    {pick.selection}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {leg.away_team} @ {leg.home_team} · {leg.sport} · {formatDate(leg.game_date)}
+                    {pick.market} · {formatDate(pick.run_date)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <OddsChip odds={leg.odds} />
-                  <StatusBadge status={leg.status} />
+                  <OddsChip odds={pick.odds_american} />
+                  <StatusBadge status={pick.status} />
                 </div>
               </div>
             ))}
