@@ -51,6 +51,7 @@ export function ParlayBuilder({ availablePicks, onSubmit }: ParlayBuilderProps) 
     setLoading(true);
     try {
       await onSubmit({
+        run_date: new Date().toISOString().split("T")[0],
         stake: Number(stake),
         pick_ids: selectedIds,
       });
