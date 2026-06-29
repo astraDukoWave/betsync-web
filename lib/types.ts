@@ -137,6 +137,12 @@ export interface RadarOpportunity {
 // Alias
 export type PipelineSuggestion = RadarOpportunity;
 
+// ---- Radar UI Filters (client-side only, not sent to backend) ----
+export type RadarFilters = {
+  minGrade?: "A" | "B" | "C";
+  sortBy?: "edge_pct" | "confidence" | "game_date";
+};
+
 // ---- Sportsbook (matches /api/v1/sportsbooks/ response) ----
 export interface Sportsbook {
   sportsbook_id: string;     // (was id)
