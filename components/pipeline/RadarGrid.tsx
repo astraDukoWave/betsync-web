@@ -22,7 +22,7 @@ function RadarCard({ opp }: { opp: RadarOpportunity }) {
       <div className="flex items-center justify-between">
         <OddsChip odds={opp.odds} />
         <span className="text-xs text-emerald-400 font-medium">
-          +{opp.edge_pct.toFixed(1)}% edge
+          {opp.market_prob.toFixed(1)}% prob. mercado
         </span>
       </div>
     </div>

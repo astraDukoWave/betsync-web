@@ -29,14 +29,14 @@ export function RadarKPIBar({ data, isLoading }: RadarKPIBarProps) {
 
   const gradeA = items.filter((x) => x.grade === "A").length;
 
-  const avgEdge =
+  const avgMarketProb =
     total > 0
-      ? items.reduce((sum, x) => sum + x.edge_pct, 0) / total
+      ? items.reduce((sum, x) => sum + x.market_prob, 0) / total
       : null;
 
   const best = items.reduce<RadarOpportunity | null>((top, x) => {
     if (!top) return x;
-    return x.edge_pct > top.edge_pct ? x : top;
+    return x.market_prob > top.market_prob ? x : top;
   }, null);
 
   const bestLabel = best
@@ -59,15 +59,15 @@ export function RadarKPIBar({ data, isLoading }: RadarKPIBarProps) {
         trend={gradeA > 0 ? "up" : "neutral"}
       />
       <KPICard
-        label="Edge Promedio"
-        value={avgEdge !== null ? `+${avgEdge.toFixed(1)}%` : "--"}
-        sub="vs línea de cierre"
+        label="Prob. de Mercado Prom."
+        value={avgMarketProb !== null ? `${avgMarketProb.toFixed(1)}%` : "--"}
+        sub="prob. implícita del mercado"
         icon={TrendingUp}
-        trend={avgEdge !== null && avgEdge > 0 ? "up" : "neutral"}
+        trend={avgMarketProb !== null && avgMarketProb > 0 ? "up" : "neutral"}
       />
       <KPICard
         label="Mejor Pick"
-        value={best ? `+${best.edge_pct.toFixed(1)}%` : "--"}
+        value={best ? `${best.market_prob.toFixed(1)}%` : "--"}
         sub={bestLabel}
         icon={Zap}
         trend={best ? "up" : "neutral"}

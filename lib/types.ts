@@ -155,8 +155,7 @@ export function adaptPickToRadarOpportunity(pick: BackendPick): RadarOpportunity
     selection: pick.selection,
     odds: pick.odds_american,
     grade: pick.grade as any,
-    edge_pct: parseFloat(pick.implied_prob) * 100,
-    confidence: parseFloat(pick.implied_prob) * 100,
+    market_prob: parseFloat(pick.implied_prob) * 100,
     notes: `Market: ${pick.market} | Status: ${pick.status}`,
   }
 }
@@ -170,8 +169,7 @@ export interface RadarOpportunity {
   selection: string;
   odds: number;
   grade: Grade;
-  edge_pct: number;
-  confidence: number;
+  market_prob: number;
   notes: string | null;
 }
 
@@ -181,7 +179,7 @@ export type PipelineSuggestion = RadarOpportunity;
 // ---- Radar UI Filters (client-side only, not sent to backend) ----
 export type RadarFilters = {
   minGrade?: "A" | "B" | "C";
-  sortBy?: "edge_pct" | "confidence" | "game_date";
+  sortBy?: "market_prob" | "game_date";
 };
 
 // ---- Sportsbook (matches /api/v1/sportsbooks/ response) ----
