@@ -29,8 +29,7 @@ function applyFilters(
 
   if (filters.sortBy) {
     result = [...result].sort((a, b) => {
-      if (filters.sortBy === "edge_pct") return b.edge_pct - a.edge_pct;
-      if (filters.sortBy === "confidence") return b.confidence - a.confidence;
+      if (filters.sortBy === "market_prob") return b.market_prob - a.market_prob;
       if (filters.sortBy === "game_date")
         return a.game_date.localeCompare(b.game_date);
       return 0;
@@ -99,7 +98,7 @@ function FilteredRadarGrid({
           <div className="flex items-center justify-between">
             <OddsChip odds={opp.odds} />
             <span className="text-xs text-emerald-400 font-medium">
-              +{opp.edge_pct.toFixed(1)}% edge
+              {opp.market_prob.toFixed(1)}% prob. mercado
             </span>
           </div>
           {opp.notes && (

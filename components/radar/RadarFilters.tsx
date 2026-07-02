@@ -59,8 +59,7 @@ export function RadarFilters({ onFilterChange }: RadarFiltersProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="none">Sin orden</SelectItem>
-            <SelectItem value="edge_pct">Edge %</SelectItem>
-            <SelectItem value="confidence">Confianza</SelectItem>
+            <SelectItem value="market_prob">Prob. de Mercado %</SelectItem>
             <SelectItem value="game_date">Fecha</SelectItem>
           </SelectContent>
         </Select>
